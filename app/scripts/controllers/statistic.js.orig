@@ -11,7 +11,7 @@ angular.module('worldProno2014App')
 })
 
 .directive('popOver', function ($compile,limitToFilter) {
-		var itemsTemplate = '<table class="table table-responsive table-condensed table-small"><tr><td class="group">Grp</td><td class="group">Equipes</td><td class="group">Pts</td><td class="group">Réel</td><td class="group">Prono</td></tr><tr ng-repeat="item in items | limitTo:(currentPage*itemsPerPage)-taille | limitTo:itemsPerPage" ng-class="{success:item.points,warning:item.points ===0}"><td>{{item.group}}</td><td>{{item.countries}}</td><td class="Pts">{{item.points}}</td><td>{{item.scorereel}}</td><td>{{item.score}}</td></tr></table><ul class="pager"><li ng-class="prevPageDisabled()"><a href ng-click="prevPage()">Previous </a></li><li ng-class="nextPageDisabled()"><a href ng-click="nextPage()">Next</a></li></ul>';
+		var itemsTemplate = '<table class="table table-responsive table-condensed table-small"><tr><td class="group">Grp</td><td class="group">Equipes</td><td class="group">Pts</td><td class="group">Réel</td><td class="group">Prono</td></tr><tr ng-repeat="item in items | limitTo:currentPage-taille | limitTo:itemsPerPage" ng-class="{success:item.points,warning:item.points ===0}"><td>{{item.group}}</td><td>{{item.countries}}</td><td class="Pts">{{item.points}}</td><td>{{item.scorereel}}</td><td>{{item.score}}</td></tr></table><ul class="pager"><li ng-class="prevPageDisabled()"><a href ng-click="prevPage()">Previous </a></li><li ng-class="nextPageDisabled()"><a href ng-click="nextPage()">Next</a></li></ul>';
 		var getTemplate = function (contentType) {
 			var template = '';
 			switch (contentType) {
@@ -92,28 +92,45 @@ angular.module('worldProno2014App')
 	$scope.realProno = PronoFactory.get({id:'Mondial'},
 		function(data) {
 			if (data.length > 0) { // recupère les pronos du joueur
-
-				$http.get('/REST/pronos/').success(function(allpronos) {
-						$scope.allPlayers = allpronos;
-						$scope.predicate = 'totalpoints';
-						$scope.reverse=true;
-
+				$scope.allPlayers = PronoFactory.query(
+					function() {
+<<<<<<< HEAD
+						
+						return $q.all([
+							clearPoints(),
+							calculatePoints()
+						])
+						.then(function(results) {
+							//Descending Order:
+							$scope.allPlayers = _.sortBy($scope.allPlayers, function(num){
+								return num.totalpoints * 1;
+							});
+						});
+=======
 						clearPoints();
 						calculatePoints();
 
-			        	//Descending Order:
-						// $scope.allPlayers = _.sortBy($scope.allPlayers, function(num){
-						// 	return num.totalpoints * -1;
+>>>>>>> origin/master
+						//supprime le mondial
+						$scope.allPlayers = _.rest($scope.allPlayers);
+
+						// $scope.allPlayersArr = _.map($scope.allPlayers, function(value,index) {
+						// 	return [value];
 						// });
 
 						// attacher les popover
 						$('[data-toggle="popover"]').popover();
-			    });
+					});
 			}
 	});
 
 	$scope.filterRole = function(allPlayers,myfilter) {
 			var result = {};
+
+			allPlayers = _.sortBy(allPlayers, function(num){
+				return num.totalpoints * -1;
+			});			
+
 			//console.log($scope.tags[0].text);
 			angular.forEach(allPlayers, function(value, key) {
 				var rolePlayer;
@@ -138,12 +155,7 @@ angular.module('worldProno2014App')
 				}
 
 			});
-			var array = $.map(result, function(value, index) {
-			    return [value];
-			});
-			console.log('array', array);
-			console.log('result',result);
-			return array;
+			return result;
 	};
 	/*
 		Ajout filtre podium pour les 3 premiers
@@ -222,7 +234,7 @@ angular.module('worldProno2014App')
 
 						$scope.allPlayers[playerNb].points[tour].result = 0;
 						$scope.allPlayers[playerNb].points[tour].score = 0;
-						var MatchTimeStamp = Math.round((new Date("2014-" + realMatch[2].date.split('/')[1] + "-" + realMatch[2].date.split('/')[0] + " " + realMatch[2].time + ":00").getTime() - 120 * 60 ) /1000 +7);
+						var MatchTimeStamp = Math.round((new Date("2014-" + realMatch[2].date.split('/')[1] + "-" + realMatch[2].date.split('/')[0] + "T" + realMatch[2].time + ":00").getTime() - 120 * 60 ) /1000 +7);
 						if (lastUpdate < MatchTimeStamp) {
 						if(realMatch[0].score > realMatch[1].score){
 							if(match[0].score > match[1].score){
@@ -263,7 +275,11 @@ angular.module('worldProno2014App')
 			$scope.allPlayers[playerNb].totalpoints= $scope.allPlayers[playerNb].points.tour1.total + $scope.allPlayers[playerNb].points.tour2.total + $scope.allPlayers[playerNb].points.tour3.total;
 
 		});
-	}
-
-
+			//Descending Order:
+			$scope.allPlayers = _.sortBy($scope.allPlayers, function(num){
+				return num.totalpoints * -1;
+			});
+		
+		}
+	
 }]);
